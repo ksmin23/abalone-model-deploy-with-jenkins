@@ -47,34 +47,35 @@ pipeline {
         }
       }
     }
-    stage('Staging Deploy') {
-      steps {
-        withAWS(credentials:"${AWS_CREDENTIAL}",region:"${AWS_REGION}") {
-          cfnUpdate(stack: "${STACK_NAME_DEPLOY_STAGING}",
-            file: "${EXPORT_TEMPLATE_NAME}",
-            paramsFile: "${EXPORT_TEMPLATE_STAGING_PARAMS}",
-            tagsFile: "${EXPORT_TEMPLATE_STAGING_TAGS}",
-            pollInterval: 10000,
-            timeoutInMinutes: 30)
-        }
-      }
-    }
-    stage('Test Staging') {
-      steps {
-        withAWS(credentials:"${AWS_CREDENTIAL}",region:"${AWS_REGION}") {
-          sh '''python3 test/test.py \
-              --import-build-config $EXPORT_TEMPLATE_STAGING_CONFIG \
-              --export-test-results $EXPORT_TEST_RESULTS
-          '''
-          sh 'cat $EXPORT_TEST_RESULTS'
-        }
-      }
-    }
-    stage('Manual Approval for Production') {
-      steps {
-        input 'Approve this model for Production'
-      }
-    }
+    // Skip stagig deployment and testing when deploying AsyncInference Endpoint
+    // stage('Staging Deploy') {
+    //   steps {
+    //     withAWS(credentials:"${AWS_CREDENTIAL}",region:"${AWS_REGION}") {
+    //       cfnUpdate(stack: "${STACK_NAME_DEPLOY_STAGING}",
+    //         file: "${EXPORT_TEMPLATE_NAME}",
+    //         paramsFile: "${EXPORT_TEMPLATE_STAGING_PARAMS}",
+    //         tagsFile: "${EXPORT_TEMPLATE_STAGING_TAGS}",
+    //         pollInterval: 10000,
+    //         timeoutInMinutes: 30)
+    //     }
+    //   }
+    // }
+    // stage('Test Staging') {
+    //   steps {
+    //     withAWS(credentials:"${AWS_CREDENTIAL}",region:"${AWS_REGION}") {
+    //       sh '''python3 test/test.py \
+    //           --import-build-config $EXPORT_TEMPLATE_STAGING_CONFIG \
+    //           --export-test-results $EXPORT_TEST_RESULTS
+    //       '''
+    //       sh 'cat $EXPORT_TEST_RESULTS'
+    //     }
+    //   }
+    // }
+    // stage('Manual Approval for Production') {
+    //   steps {
+    //     input 'Approve this model for Production'
+    //   }
+    // }
     stage('Prod Deploy') {
       steps {
         withAWS(credentials:"${AWS_CREDENTIAL}",region:"${AWS_REGION}") {

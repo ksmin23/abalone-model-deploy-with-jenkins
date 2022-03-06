@@ -40,7 +40,13 @@ Parameters:
     Default: true
     Type: String
     AllowedValues: [true, false]   
-
+  MaxConcurrentInvocationsPerInstance:
+    Type: Number
+    Description: The maximum number of concurrent requests sent by the SageMaker client to the model container.
+    Default: 2
+  AsyncInferenceS3OutputPath:
+    Type: String
+    Description: The Amazon S3 location to upload inference responses to.
 
 Resources:
   Model:
@@ -53,19 +59,17 @@ Resources:
   EndpointConfig:
     Type: AWS::SageMaker::EndpointConfig
     Properties:
+      AsyncInferenceConfig:
+          ClientConfig:
+            MaxConcurrentInvocationsPerInstance: !Ref MaxConcurrentInvocationsPerInstance
+          OutputConfig:
+            S3OutputPath: !Ref AsyncInferenceS3OutputPath
       ProductionVariants:
         - InitialInstanceCount: !Ref EndpointInstanceCount
           InitialVariantWeight: 1.0
           InstanceType: !Ref EndpointInstanceType
           ModelName: !GetAtt Model.ModelName
           VariantName: AllTraffic
-      DataCaptureConfig:
-          EnableCapture: !Ref EnableDataCapture 
-          InitialSamplingPercentage: !Ref SamplingPercentage
-          DestinationS3Uri: !Ref DataCaptureUploadPath
-          CaptureOptions:
-            - CaptureMode: Input
-            - CaptureMode: Output
 
   Endpoint:
     Type: AWS::SageMaker::Endpoint
